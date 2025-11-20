@@ -1,0 +1,107 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Panel de Administración - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Panel de Administración</h2>
+    </div>
+</div>
+
+<!-- Tarjetas de estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Incidencias</h5>
+                <p class="display-4">{{ total_incidencias }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Pendientes</h5>
+                <p class="display-4">{{ incidencias_pendientes }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">En Proceso</h5>
+                <p class="display-4">{{ incidencias_proceso }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Resueltas</h5>
+                <p class="display-4">{{ incidencias_resueltas }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enlaces rápidos -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Acciones Rápidas</h5>
+                <div class="list-group">
+                    <a href="{% url 'admin:aqualand_app_incidencia_add' %}" class="list-group-item list-group-item-action">
+                        Nueva Incidencia
+                    </a>
+                    <a href="{% url 'admin:aqualand_app_recursoeducativo_add' %}" class="list-group-item list-group-item-action">
+                        Nuevo Recurso Educativo
+                    </a>
+                    <a href="{% url 'admin:auth_user_add' %}" class="list-group-item list-group-item-action">
+                        Nuevo Usuario
+                    </a>
+                    <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                        Panel de Administración Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Últimas Incidencias</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for incidencia in ultimas_incidencias %}
+                        <a href="{% url 'detalle_incidencia' incidencia.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ incidencia.titulo }}</h5>
+                                <small>{{ incidencia.fecha_reporte|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">{{ incidencia.descripcion|truncatewords:30 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small>
+                                    <span class="badge bg-primary">{{ incidencia.get_tipo_display }}</span>
+                                    <span class="badge bg-secondary">{{ incidencia.region }}</span>
+                                    <span class="badge bg-{{ incidencia.estado|lower }}">
+                                        {{ incidencia.get_estado_display }}
+                                    </span>
+                                </small>
+                                <div>
+                                    <small class="me-3">Reportado por: {{ incidencia.reportado_por }}</small>
+                                    <a href="{% url 'editar_incidencia' incidencia.id %}" class="btn btn-sm btn-primary">Editar</a>
+                                    <a href="{% url 'eliminar_incidencia' incidencia.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

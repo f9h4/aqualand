@@ -1,0 +1,86 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Editar Incidencia - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Editar Incidencia</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="editarForm">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            {% if field.is_hidden %}
+                                {{ field }}
+                            {% else %}
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                <div class="alert alert-danger">
+                                    {{ field.errors }}
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación de la Incidencia</label>
+                            <div id="map" style="height: 400px; width: 100%;"></div>
+                            <div class="form-text">Haz clic en el mapa para actualizar la ubicación de la incidencia.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    // Inicializar el mapa
+    var latPrev = document.getElementById('id_ubicacion_lat').value;
+    var lngPrev = document.getElementById('id_ubicacion_lng').value;
+    
+    var startLat = latPrev ? parseFloat(latPrev) : -33.4489;
+    var startLng = lngPrev ? parseFloat(lngPrev) : -70.6693;
+    
+    var map = L.map('map').setView([startLat, startLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+    
+    // Si hay valores previos, mostrar el marcador
+    if (latPrev && lngPrev) {
+        marker = L.marker([startLat, startLng]).addTo(map);
+    }
+    
+    // Manejar clics en el mapa
+    map.on('click', function(e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker(e.latlng).addTo(map);
+        document.getElementById('id_ubicacion_lat').value = e.latlng.lat;
+        document.getElementById('id_ubicacion_lng').value = e.latlng.lng;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}{{ incidencia.titulo }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>{{ incidencia.titulo }}</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="card-text">{{ incidencia.descripcion }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Tipo:</strong> {{ incidencia.get_tipo_display }}</p>
+                        <p><strong>Estado:</strong> {{ incidencia.get_estado_display }}</p>
+                        <p><strong>Región:</strong> {{ incidencia.region }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Dirección:</strong> {{ incidencia.direccion }}</p>
+                        <p><strong>Reportado por:</strong> {{ incidencia.reportado_por }}</p>
+                        <p><strong>Fecha de reporte:</strong> {{ incidencia.fecha_reporte|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+
+                {% if incidencia.imagen %}
+                    <img src="{{ incidencia.imagen.url }}" class="img-fluid mt-3" alt="Imagen de la incidencia">
+                {% endif %}
+            </div>
+        </div>
+
+        {% if incidencia.ubicacion_lat and incidencia.ubicacion_lng %}
+        <div id="map" style="height: 400px; width: 100%;" class="mb-4"></div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">¿Tienes una incidencia similar?</h5>
+                <p class="card-text">Reporta cualquier problema relacionado con el servicio de agua en tu zona.</p>
+                <a href="{% url 'reportar_incidencia' %}" class="btn btn-primary">Reportar Nueva Incidencia</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    {% if incidencia.ubicacion_lat and incidencia.ubicacion_lng %}
+    var map = L.map('map').setView([{{ incidencia.ubicacion_lat }}, {{ incidencia.ubicacion_lng }}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([{{ incidencia.ubicacion_lat }}, {{ incidencia.ubicacion_lng }}])
+        .addTo(map)
+        .bindPopup("{{ incidencia.titulo }}");
+    {% endif %}
+</script>
+{% endblock %}

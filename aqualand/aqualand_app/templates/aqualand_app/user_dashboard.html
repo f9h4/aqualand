@@ -1,0 +1,63 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Mi Panel - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Bienvenido, {{ request.user.username }}</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Acciones Rápidas</h5>
+                <div class="list-group">
+                    <a href="{% url 'reportar_incidencia' %}" class="list-group-item list-group-item-action">
+                        Reportar Nueva Incidencia
+                    </a>
+                    <a href="{% url 'mapa_incidencias' %}" class="list-group-item list-group-item-action">
+                        Ver Mapa de Incidencias
+                    </a>
+                    <a href="{% url 'recursos_educativos' %}" class="list-group-item list-group-item-action">
+                        Recursos Educativos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Mis Incidencias Reportadas</h5>
+            </div>
+            <div class="card-body">
+                {% if incidencias %}
+                    <div class="list-group">
+                        {% for incidencia in incidencias %}
+                            <a href="{% url 'detalle_incidencia' incidencia.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ incidencia.titulo }}</h5>
+                                    <small>{{ incidencia.fecha_reporte|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <p class="mb-1">{{ incidencia.descripcion|truncatewords:30 }}</p>
+                                <small>
+                                    <span class="badge bg-primary">{{ incidencia.get_tipo_display }}</span>
+                                    <span class="badge bg-secondary">{{ incidencia.region }}</span>
+                                    <span class="badge bg-{{ incidencia.estado|lower }}">
+                                        {{ incidencia.get_estado_display }}
+                                    </span>
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Aún no has reportado ninguna incidencia.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Estadísticas - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Estadísticas y Análisis</h2>
+    </div>
+</div>
+
+<!-- Tarjetas de resumen -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total de Incidencias</h5>
+                <p class="card-text display-4">{{ total_incidencias }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Incidencias Activas</h5>
+                <p class="card-text display-4">{{ incidencias_activas }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Incidencias Resueltas</h5>
+                <p class="card-text display-4">{{ incidencias_resueltas }}</p>
+                <p class="card-text">{{ porcentaje_resueltas|floatformat:1 }}% del total</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row">
+    <!-- Gráfico de Cobertura por Región -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Cobertura de Agua Potable por Región</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="coberturaChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Tipos de Incidencias -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Distribución de Tipos de Incidencias</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="tiposChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de Tendencia de Incidencias -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Tendencia de Incidencias (Últimos 30 días)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="tendenciaChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Cobertura por Región
+    new Chart(document.getElementById('coberturaChart'), {
+        type: 'bar',
+        data: {{ cobertura_data|safe }},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1000000
+                }
+            }
+        }
+    });
+
+    // Gráfico de Tipos de Incidencias
+    new Chart(document.getElementById('tiposChart'), {
+        type: 'pie',
+        data: {{ tipos_data|safe }},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+
+    // Gráfico de Tendencia
+    new Chart(document.getElementById('tendenciaChart'), {
+        type: 'line',
+        data: {{ tendencia_data|safe }},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

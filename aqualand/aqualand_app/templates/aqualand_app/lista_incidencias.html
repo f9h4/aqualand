@@ -1,0 +1,44 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Lista de Incidencias - {{ block.super }}{% endblock %}
+
+{% block content %}
+<h2>Incidencias Reportadas</h2>
+<div class="row mb-4">
+    <div class="col">
+        <a href="{% url 'reportar_incidencia' %}" class="btn btn-primary">
+            Reportar Nueva Incidencia
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="list-group">
+            {% for incidencia in incidencias %}
+                <a href="{% url 'detalle_incidencia' incidencia.id %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ incidencia.titulo }}</h5>
+                        <small>{{ incidencia.fecha_reporte|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ incidencia.descripcion|truncatewords:50 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>
+                            <span class="badge bg-primary">{{ incidencia.get_tipo_display }}</span>
+                            <span class="badge bg-secondary">{{ incidencia.region }}</span>
+                            <span class="badge bg-{{ incidencia.estado|lower }}">
+                                {{ incidencia.get_estado_display }}
+                            </span>
+                        </small>
+                        <small>Reportado por: {{ incidencia.reportado_por }}</small>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="alert alert-info">
+                    No hay incidencias reportadas aún.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

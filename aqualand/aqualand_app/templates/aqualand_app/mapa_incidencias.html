@@ -1,0 +1,210 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Mapa de Incidencias - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col">
+        <h2>Mapa de Incidencias</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-body">
+                <div id="map" style="height: 700px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Filtros</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Tipo de Incidencia</label>
+                    <div id="tipo-filtros">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="CORTE" id="tipo-corte" checked>
+                            <label class="form-check-label" for="tipo-corte">
+                                Corte de Agua
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="FUGA" id="tipo-fuga" checked>
+                            <label class="form-check-label" for="tipo-fuga">
+                                Fuga de Agua
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="CALIDAD" id="tipo-calidad" checked>
+                            <label class="form-check-label" for="tipo-calidad">
+                                Problema de Calidad
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="OTROS" id="tipo-otros" checked>
+                            <label class="form-check-label" for="tipo-otros">
+                                Otros Problemas
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Estado</label>
+                    <div id="estado-filtros">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="REPORTADO" id="estado-reportado" checked>
+                            <label class="form-check-label" for="estado-reportado">
+                                Reportado
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Estadísticas</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total de incidencias reportadas:</strong> <span id="total-incidencias">0</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+<script>
+    // Inicializar el mapa
+    var map = L.map('map').setView([-33.4489, -70.6693], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Crear un grupo de marcadores con clustering
+    var markers = L.markerClusterGroup();
+    var allMarkers = [];
+
+    // Función para actualizar los contadores de estadísticas
+    function updateStats(incidencias) {
+        const total = incidencias.length;
+        const activas = incidencias.filter(i => i.estado !== 'RESUELTO').length;
+        const resueltas = incidencias.filter(i => i.estado === 'RESUELTO').length;
+
+        document.getElementById('total-incidencias').textContent = total;
+        document.getElementById('incidencias-activas').textContent = activas;
+        document.getElementById('incidencias-resueltas').textContent = resueltas;
+    }
+
+    // Función para obtener los filtros seleccionados
+    function getSelectedFilters() {
+        const tipoFiltros = Array.from(document.querySelectorAll('#tipo-filtros input:checked')).map(cb => cb.value);
+        const estadoFiltros = Array.from(document.querySelectorAll('#estado-filtros input:checked')).map(cb => cb.value);
+        return { tipos: tipoFiltros, estados: estadoFiltros };
+    }
+
+    // Función para actualizar los marcadores según los filtros
+    function updateMarkers() {
+        const filtros = getSelectedFilters();
+        markers.clearLayers();
+        
+        const filteredMarkers = allMarkers.filter(marker => {
+            const incidencia = marker.incidencia;
+            return filtros.tipos.includes(incidencia.tipo) && filtros.estados.includes(incidencia.estado);
+        });
+
+        filteredMarkers.forEach(marker => markers.addLayer(marker));
+        updateStats(filteredMarkers.map(m => m.incidencia));
+    }
+
+    // Ubicación predeterminada (centro de Chile)
+    const defaultLat = -33.4489;
+    const defaultLng = -70.6693;
+
+    // Cargar las incidencias desde la API
+    fetch('/api/incidencias/')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(incidencia => {
+                // Si tiene coordenadas, usar esas
+                if (incidencia.ubicacion_lat && incidencia.ubicacion_lng) {
+                    addMarkerToMap(incidencia, incidencia.ubicacion_lat, incidencia.ubicacion_lng);
+                } 
+                // Si no tiene coordenadas pero tiene dirección, geocodificar
+                else if (incidencia.direccion) {
+                    geocodeAddress(incidencia);
+                }
+                // Si no tiene ni coordenadas ni dirección, usar ubicación predeterminada
+                else {
+                    addMarkerToMap(incidencia, defaultLat, defaultLng);
+                }
+            });
+            
+            updateMarkers();
+            map.addLayer(markers);
+        });
+
+    // Función para geocodificar una dirección usando Nominatim
+    function geocodeAddress(incidencia) {
+        const address = incidencia.direccion;
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(results => {
+                if (results.length > 0) {
+                    const result = results[0];
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    addMarkerToMap(incidencia, lat, lng);
+                    updateMarkers();
+                } else {
+                    // Si no se encuentran resultados, usar ubicación predeterminada
+                    addMarkerToMap(incidencia, defaultLat, defaultLng);
+                    updateMarkers();
+                }
+            })
+            .catch(error => {
+                console.log('Error geocodificando:', error);
+                // Si hay error, usar ubicación predeterminada
+                addMarkerToMap(incidencia, defaultLat, defaultLng);
+                updateMarkers();
+            });
+    }
+
+    // Función para agregar un marcador al mapa
+    function addMarkerToMap(incidencia, lat, lng) {
+        const marker = L.marker([lat, lng]);
+        marker.incidencia = incidencia;
+        
+        const popupContent = `
+            <h6>${incidencia.titulo}</h6>
+            <p><strong>Tipo:</strong> ${incidencia.tipo_display}</p>
+            <p><strong>Estado:</strong> ${incidencia.estado_display}</p>
+            <p><strong>Región:</strong> ${incidencia.region_nombre}</p>
+            ${incidencia.direccion ? `<p><strong>Dirección:</strong> ${incidencia.direccion}</p>` : '<p><em>Sin dirección especificada</em></p>'}
+            <a href="/incidencias/${incidencia.id}/" class="btn btn-sm btn-primary">Ver Detalles</a>
+        `;
+        
+        marker.bindPopup(popupContent);
+        allMarkers.push(marker);
+    }
+
+    // Eventos para los filtros
+    document.querySelectorAll('#tipo-filtros input, #estado-filtros input').forEach(checkbox => {
+        checkbox.addEventListener('change', updateMarkers);
+    });
+</script>
+{% endblock %}

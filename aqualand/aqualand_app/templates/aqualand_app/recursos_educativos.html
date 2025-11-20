@@ -1,0 +1,116 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Recursos Educativos - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Recursos Educativos sobre el Agua</h2>
+        <p class="lead">Aprende sobre el uso responsable del agua y su importancia para nuestra comunidad.</p>
+    </div>
+</div>
+
+<!-- Sección de Destacados -->
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h3 class="card-title">¿Sabías que?</h3>
+                <p class="card-text">En Chile, el 47.2% de la población rural no tiene acceso formal a agua potable, dependiendo de pozos, ríos o camiones aljibe.</p>
+                <p class="card-text">Más de 417,000 personas en áreas rurales carecen de este servicio en sus hogares.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h3 class="card-title">Consejos de Ahorro</h3>
+                <ul class="card-text">
+                    <li>Repara las fugas de agua inmediatamente</li>
+                    <li>Cierra la llave mientras te lavas los dientes</li>
+                    <li>Riega las plantas temprano o al anochecer</li>
+                    <li>Reutiliza el agua cuando sea posible</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Recursos -->
+<div class="row mb-4">
+    <div class="col">
+        <h3>Materiales Educativos</h3>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for recurso in recursos %}
+    <div class="col">
+        <div class="card h-100">
+            {% if recurso.tipo == 'VIDEO' %}
+            <div class="card-img-top bg-light text-center py-3">
+                <i class="fas fa-video fa-3x text-primary"></i>
+            </div>
+            {% elif recurso.tipo == 'DOCUMENTO' %}
+            <div class="card-img-top bg-light text-center py-3">
+                <i class="fas fa-file-pdf fa-3x text-danger"></i>
+            </div>
+            {% elif recurso.tipo == 'INFOGRAFIA' %}
+            <div class="card-img-top bg-light text-center py-3">
+                <i class="fas fa-image fa-3x text-success"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ recurso.titulo }}</h5>
+                <p class="card-text">{{ recurso.descripcion|truncatewords:30 }}</p>
+                <p class="card-text"><small class="text-muted">
+                    Publicado el {{ recurso.fecha_publicacion|date:"d/m/Y" }}
+                </small></p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ recurso.archivo.url }}" class="btn btn-primary" target="_blank">
+                    Ver Recurso
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No hay recursos educativos disponibles en este momento.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Sección de Estadísticas -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Impacto del Uso Responsable del Agua</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h2 class="text-primary">200L</h2>
+                        <p>Consumo promedio diario por persona</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h2 class="text-success">30%</h2>
+                        <p>Ahorro posible con buenas prácticas</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h2 class="text-info">60L</h2>
+                        <p>Ahorro potencial diario por persona</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
