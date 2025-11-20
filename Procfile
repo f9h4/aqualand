@@ -1,2 +1,2 @@
-web: cd aqualand && python manage.py migrate && gunicorn aqualand.wsgi --bind 0.0.0.0:$PORT
-release: cd aqualand && python manage.py migrate
+web: gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 2 --chdir ./aqualand
+release: cd aqualand && python manage.py migrate && python manage.py collectstatic --noinput
