@@ -115,7 +115,7 @@ def lista_incidencias(request):
     })
 
 def detalle_incidencia(request, incidencia_id):
-    incidencia = Incidencia.objects.get(pk=incidencia_id)
+    incidencia = get_object_or_404(Incidencia, pk=incidencia_id)
     return render(request, 'aqualand_app/detalle_incidencia.html', {
         'incidencia': incidencia
     })
