@@ -24,17 +24,19 @@ def check_requirements():
         'whitenoise',
         'psycopg2',
         'dj_database_url',
-        'Pillow'
+        'PIL',  # Pillow se importa como PIL
     ]
     
+    all_installed = True
     for package in required_packages:
         try:
             __import__(package)
             print(f"  ✓ {package}")
         except ImportError:
             print(f"  ✗ {package} - FALTA INSTALAR")
-            return False
-    return True
+            all_installed = False
+    
+    return all_installed
 
 def check_database():
     """Verifica la conexión con la base de datos"""
