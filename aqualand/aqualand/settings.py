@@ -22,12 +22,17 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-x7d3)*6q5i&*_w#_j02y=@&tl%i0h&pnc7^#t_v0stfqcr4i97')
+# Usar la clave por defecto en desarrollo, pero obligar a configurar en producción
+_DEFAULT_SECRET_KEY = 'django-insecure-x7d3)*6q5i&*_w#_j02y=@&tl%i0h&pnc7^#t_v0stfqcr4i97'
+SECRET_KEY = os.environ.get('SECRET_KEY', _DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# En Railway, siempre es False a menos que se configure explícitamente
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,*.up.railway.app,*.railway.app').split(',')
+# ALLOWED_HOSTS - añade soporte para Railway automáticamente
+_default_hosts = 'localhost,127.0.0.1,*.up.railway.app,*.railway.app'
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',')]
 
 
 # Application definition
@@ -52,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'aqualand_app.middleware.ErrorHandlingMiddleware',
+    'aqualand_app.middleware.SecurityHeadersMiddleware',
 ]
 
 ROOT_URLCONF = 'aqualand.urls'

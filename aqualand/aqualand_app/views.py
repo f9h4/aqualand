@@ -11,16 +11,37 @@ from .models import Incidencia, Region, EstadisticaServicio, RecursoEducativo
 from .forms import IncidenciaForm
 from .serializers import IncidenciaSerializer, RegionSerializer
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.views.decorators.http import require_http_methods
 
 def is_admin(user):
     return user.is_staff
 
-@login_required
+@require_http_methods(["GET", "HEAD"])
+def health_check(request):
+    """Endpoint para verificar que la aplicación está en línea"""
+    try:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return JsonResponse({
+            'status': 'healthy',
+            'message': 'Aqualand is running'
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'message': str(e)
+        }, status=503)
+
 def home(request):
-    incidencias = Incidencia.objects.all().order_by('-fecha_reporte')[:5]
-    return render(request, 'aqualand_app/home.html', {
-        'incidencias': incidencias
-    })
+    """Página principal - accesible para todos"""
+    if request.user.is_authenticated:
+        incidencias = Incidencia.objects.all().order_by('-fecha_reporte')[:5]
+        return render(request, 'aqualand_app/home.html', {
+            'incidencias': incidencias
+        })
+    else:
+        return redirect('login')
 
 def login_view(request):
     if request.method == 'POST':
