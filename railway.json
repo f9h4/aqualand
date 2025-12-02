@@ -1,0 +1,36 @@
+[
+  {
+    "name": "SECRET_KEY",
+    "description": "Clave secreta de Django (generada automáticamente)",
+    "example": "use 'python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\"'",
+    "required": true
+  },
+  {
+    "name": "DEBUG",
+    "description": "Modo debug (False en producción)",
+    "example": "False",
+    "required": true,
+    "default": "False"
+  },
+  {
+    "name": "ALLOWED_HOSTS",
+    "description": "Hosts permitidos (separados por comas)",
+    "example": "*.up.railway.app,*.railway.app",
+    "required": true,
+    "default": "localhost,127.0.0.1,*.up.railway.app,*.railway.app"
+  },
+  {
+    "name": "DATABASE_URL",
+    "description": "URL de conexión a BD (Railway la proporciona automáticamente)",
+    "example": "postgresql://user:password@host:port/dbname",
+    "required": false,
+    "note": "Railway automáticamente proporciona esta variable"
+  },
+  {
+    "name": "DJANGO_LOG_LEVEL",
+    "description": "Nivel de logging de Django",
+    "example": "INFO",
+    "required": false,
+    "default": "INFO"
+  }
+]

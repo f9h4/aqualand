@@ -130,77 +130,91 @@ def recursos_educativos(request):
     })
 
 def estadisticas(request):
-    # Obtener todas las regiones
-    regiones = Region.objects.all()
+    try:
+        # Obtener todas las regiones
+        regiones = Region.objects.all()
+        
+        # Datos para el gráfico de cobertura por región
+        cobertura_data = {
+            'labels': [region.nombre for region in regiones] if regiones.exists() else ['Sin datos'],
+            'datasets': [{
+                'label': 'Cobertura de Agua Potable (%)',
+                'data': [region.cobertura_agua for region in regiones] if regiones.exists() else [0],
+                'backgroundColor': 'rgba(54, 162, 235, 0.5)',
+                'borderColor': 'rgba(54, 162, 235, 1)',
+                'borderWidth': 1
+            }]
+        }
+        
+        # Crear diccionario de tipos para búsqueda rápida
+        tipos_dict = dict(Incidencia.TIPO_CHOICES)
+        
+        # Estadísticas de incidencias por tipo
+        tipos_incidencias = Incidencia.objects.values('tipo').annotate(
+            total=Count('id')
+        ).order_by('tipo')
+        
+        tipos_labels = [tipos_dict.get(tipo['tipo'], tipo['tipo']) for tipo in tipos_incidencias]
+        tipos_data_values = [tipo['total'] for tipo in tipos_incidencias]
+        
+        tipos_data = {
+            'labels': tipos_labels if tipos_labels else ['Sin incidencias'],
+            'datasets': [{
+                'data': tipos_data_values if tipos_data_values else [0],
+                'backgroundColor': [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)'
+                ]
+            }]
+        }
     
-    # Datos para el gráfico de cobertura por región
-    cobertura_data = {
-        'labels': [region.nombre for region in regiones],
-        'datasets': [{
-            'label': 'Cobertura de Agua Potable (%)',
-            'data': [region.cobertura_agua for region in regiones],
-            'backgroundColor': 'rgba(54, 162, 235, 0.5)',
-            'borderColor': 'rgba(54, 162, 235, 1)',
-            'borderWidth': 1
-        }]
-    }
+        # Estadísticas de últimos 30 días
+        fecha_inicio = timezone.now() - timedelta(days=30)
+        incidencias_mes = Incidencia.objects.filter(
+            fecha_reporte__gte=fecha_inicio
+        ).values('fecha_reporte__date').annotate(
+            total=Count('id')
+        ).order_by('fecha_reporte__date')
+        
+        tendencia_data = {
+            'labels': [str(item['fecha_reporte__date']) for item in incidencias_mes] if incidencias_mes.exists() else ['Sin datos'],
+            'datasets': [{
+                'label': 'Incidencias Reportadas',
+                'data': [item['total'] for item in incidencias_mes] if incidencias_mes.exists() else [0],
+                'borderColor': 'rgba(75, 192, 192, 1)',
+                'fill': False
+            }]
+        }
+        
+        # Resumen de estadísticas
+        total_incidencias = Incidencia.objects.count()
+        incidencias_activas = Incidencia.objects.filter(
+            estado__in=['REPORTADO', 'EN_PROCESO']
+        ).count()
+        incidencias_resueltas = Incidencia.objects.filter(
+            estado='RESUELTO'
+        ).count()
+        
+        context = {
+            'cobertura_data': cobertura_data,
+            'tipos_data': tipos_data,
+            'tendencia_data': tendencia_data,
+            'total_incidencias': total_incidencias,
+            'incidencias_activas': incidencias_activas,
+            'incidencias_resueltas': incidencias_resueltas,
+            'porcentaje_resueltas': (incidencias_resueltas / total_incidencias * 100) if total_incidencias > 0 else 0
+        }
+        
+        return render(request, 'aqualand_app/estadisticas.html', context)
     
-    # Estadísticas de incidencias por tipo
-    tipos_incidencias = Incidencia.objects.values('tipo').annotate(
-        total=Count('id')
-    ).order_by('tipo')
-    
-    tipos_data = {
-        'labels': [dict(Incidencia.TIPO_CHOICES)[tipo['tipo']] for tipo in tipos_incidencias],
-        'datasets': [{
-            'data': [tipo['total'] for tipo in tipos_incidencias],
-            'backgroundColor': [
-                'rgba(255, 99, 132, 0.5)',
-                'rgba(54, 162, 235, 0.5)',
-                'rgba(255, 206, 86, 0.5)',
-                'rgba(75, 192, 192, 0.5)'
-            ]
-        }]
-    }
-    
-    # Estadísticas de últimos 30 días
-    fecha_inicio = timezone.now() - timedelta(days=30)
-    incidencias_mes = Incidencia.objects.filter(
-        fecha_reporte__gte=fecha_inicio
-    ).values('fecha_reporte__date').annotate(
-        total=Count('id')
-    ).order_by('fecha_reporte__date')
-    
-    tendencia_data = {
-        'labels': [str(item['fecha_reporte__date']) for item in incidencias_mes],
-        'datasets': [{
-            'label': 'Incidencias Reportadas',
-            'data': [item['total'] for item in incidencias_mes],
-            'borderColor': 'rgba(75, 192, 192, 1)',
-            'fill': False
-        }]
-    }
-    
-    # Resumen de estadísticas
-    total_incidencias = Incidencia.objects.count()
-    incidencias_activas = Incidencia.objects.filter(
-        estado__in=['REPORTADO', 'EN_PROCESO']
-    ).count()
-    incidencias_resueltas = Incidencia.objects.filter(
-        estado='RESUELTO'
-    ).count()
-    
-    context = {
-        'cobertura_data': cobertura_data,
-        'tipos_data': tipos_data,
-        'tendencia_data': tendencia_data,
-        'total_incidencias': total_incidencias,
-        'incidencias_activas': incidencias_activas,
-        'incidencias_resueltas': incidencias_resueltas,
-        'porcentaje_resueltas': (incidencias_resueltas / total_incidencias * 100) if total_incidencias > 0 else 0
-    }
-    
-    return render(request, 'aqualand_app/estadisticas.html', context)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error en vista de estadísticas: {str(e)}", exc_info=True)
+        messages.error(request, 'Error al cargar las estadísticas. Por favor, intenta más tarde.')
+        return redirect('home')
 
 class IncidenciaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Incidencia.objects.all().order_by('-fecha_reporte')
