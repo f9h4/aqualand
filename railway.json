@@ -5,24 +5,29 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "gunicorn aqualand.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --worker-class sync --timeout 60 --log-level info"
+    "restartPolicyMaxRetries": 5,
+    "restartPolicyWindowMs": 600000
   },
   "variables": {
     "SECRET_KEY": {
-      "description": "Clave secreta de Django",
+      "description": "Clave secreta de Django - DEBE CONFIGURARSE EN RAILWAY",
       "value": ""
     },
     "DEBUG": {
-      "description": "Modo debug",
+      "description": "Modo debug - False en producción",
       "value": "False"
     },
     "ALLOWED_HOSTS": {
-      "description": "Hosts permitidos",
-      "value": "*.up.railway.app,*.railway.app"
+      "description": "Hosts permitidos para Django",
+      "value": "*.up.railway.app,*.railway.app,localhost,127.0.0.1"
     },
     "DJANGO_LOG_LEVEL": {
-      "description": "Nivel de logging",
+      "description": "Nivel de logging de Django",
       "value": "INFO"
+    },
+    "PORT": {
+      "description": "Puerto en el que escucha la aplicación",
+      "value": "8000"
     }
   }
 }
