@@ -7,6 +7,22 @@ from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
+class HealthCheckBypassMiddleware:
+    """Middleware para permitir health checks sin validación de ALLOWED_HOSTS"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Allow health checks from any host
+        if request.path == '/health/':
+            # Temporarily add any host
+            if hasattr(request, 'META'):
+                request.META['HTTP_HOST'] = 'localhost'
+        
+        response = self.get_response(request)
+        return response
+
 class ErrorHandlingMiddleware:
     """Middleware para manejar errores no capturados"""
     

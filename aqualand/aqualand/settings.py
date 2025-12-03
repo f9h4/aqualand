@@ -23,16 +23,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Usar la clave por defecto en desarrollo, pero obligar a configurar en producción
-_DEFAULT_SECRET_KEY = 'django-insecure-x7d3)*6q5i&*_w#_j02y=@&tl%i0h&pnc7^#t_v0stfqcr4i97'
+_DEFAULT_SECRET_KEY = 'django-insecure-x7d3*6q5i&*_w#_j02y=@&tl%i0h&pnc7^#t_v0stfqcr4i97'
 SECRET_KEY = os.environ.get('SECRET_KEY', _DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # En Railway, siempre es False a menos que se configure explícitamente
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-# ALLOWED_HOSTS - añade soporte para Railway automáticamente
-_default_hosts = 'localhost,127.0.0.1,*.up.railway.app,*.railway.app'
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',')]
+# ALLOWED_HOSTS - permite todos en desarrollo, configurar en producción
+# En Railway, acepta todos los dominios *.up.railway.app
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    _default_hosts = 'localhost,127.0.0.1,.up.railway.app,.railway.app'
+    ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',')]
 
 
 # Application definition
@@ -49,6 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'aqualand_app.middleware.HealthCheckBypassMiddleware',  # Debe ir primero
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

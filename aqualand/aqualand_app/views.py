@@ -16,22 +16,31 @@ from django.views.decorators.http import require_http_methods
 def is_admin(user):
     return user.is_staff
 
-@require_http_methods(["GET", "HEAD"])
+@require_http_methods(["GET", "HEAD", "OPTIONS"])
 def health_check(request):
-    """Endpoint para verificar que la aplicación está en línea"""
+    """Endpoint para verificar que la aplicación está en línea
+    No requiere autenticación y debe funcionar incluso con hosts desconocidos
+    """
     try:
         from django.db import connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-        return JsonResponse({
+        response = JsonResponse({
             'status': 'healthy',
-            'message': 'Aqualand is running'
+            'message': 'Aqualand is running',
+            'database': 'connected'
         }, status=200)
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        return response
     except Exception as e:
-        return JsonResponse({
+        response = JsonResponse({
             'status': 'unhealthy',
-            'message': str(e)
+            'message': str(e),
+            'database': 'disconnected'
         }, status=503)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 def home(request):
     """Página principal - accesible para todos"""
