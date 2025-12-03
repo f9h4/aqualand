@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'aqualand_app.middleware.HealthCheckBypassMiddleware',  # Debe ir primero
+    'aqualand_app.middleware.CSRFFixMiddleware',  # Antes de CSRF middleware
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -162,18 +163,31 @@ LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.railway.app']
+# CSRF Configuration - Permissive for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://up.railway.app',
+    'https://railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Security and Production Settings
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+# CSRF Cookie settings - Allow cookies even over HTTP during development
+if DEBUG:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    CSRF_COOKIE_HTTPONLY = False  # Important for CSRF tokens to work
+    SESSION_COOKIE_HTTPONLY = True
+
+# Security headers - more permissive for development
+SECURE_SSL_REDIRECT = False if DEBUG else True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 # Error pages
 ERROR_404_TEMPLATE = '404.html'

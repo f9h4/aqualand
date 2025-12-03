@@ -8,17 +8,22 @@ from django.shortcuts import render
 logger = logging.getLogger(__name__)
 
 class HealthCheckBypassMiddleware:
-    """Middleware para permitir health checks sin validación de ALLOWED_HOSTS"""
+    """Middleware para permitir health checks y login sin validación estricta"""
     
     def __init__(self, get_response):
         self.get_response = get_response
     
     def __call__(self, request):
-        # Allow health checks from any host
-        if request.path == '/health/':
-            # Temporarily add any host
+        # Normalize host for health checks and forms
+        if request.path in ['/health/', '/login/', '/registro/', '/logout/']:
             if hasattr(request, 'META'):
-                request.META['HTTP_HOST'] = 'localhost'
+                # Use localhost as fallback host
+                host = request.META.get('HTTP_HOST', 'localhost')
+                # If it looks like a Railway domain, keep it; otherwise normalize
+                if host and ('railway' in host or 'localhost' in host or '127.0.0.1' in host):
+                    pass  # Keep the original host
+                else:
+                    request.META['HTTP_HOST'] = 'localhost'
         
         response = self.get_response(request)
         return response
@@ -43,6 +48,22 @@ class ErrorHandlingMiddleware:
                 status=500
             )
 
+class CSRFFixMiddleware:
+    """Middleware para arreglar problemas de CSRF en Railway"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Si viene de un dominio Railway, confiar en el CSRF token
+        host = request.META.get('HTTP_HOST', '')
+        if 'railway' in host.lower() or 'localhost' in host.lower():
+            # Mark request as trusted for CSRF
+            request.META['HTTP_X_FORWARDED_PROTO'] = 'https'
+        
+        response = self.get_response(request)
+        return response
+
 class SecurityHeadersMiddleware:
     """Middleware para agregar headers de seguridad"""
     
@@ -52,10 +73,10 @@ class SecurityHeadersMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         
-        # Headers de seguridad
+        # Headers de seguridad - menos restrictivos para desarrollo
         response['X-Content-Type-Options'] = 'nosniff'
-        response['X-Frame-Options'] = 'DENY'
+        response['X-Frame-Options'] = 'SAMEORIGIN'  # Cambié de DENY a SAMEORIGIN
         response['X-XSS-Protection'] = '1; mode=block'
-        response['Referrer-Policy'] = 'no-referrer'
+        response['Referrer-Policy'] = 'same-origin'  # Cambié de no-referrer
         
         return response
