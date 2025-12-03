@@ -11,7 +11,7 @@
   "variables": {
     "SECRET_KEY": {
       "description": "Clave secreta de Django - DEBE CONFIGURARSE EN RAILWAY",
-      "value": ""
+      "value": "-uzr!z1%=64zp@kqo5)pw)l7zmy0c^+ix30gla2vzesth#2l$q"
     },
     "DEBUG": {
       "description": "Modo debug - False en producción",
