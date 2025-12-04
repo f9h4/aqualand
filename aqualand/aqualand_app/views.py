@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import viewsets
 from .models import Incidencia, Region, EstadisticaServicio, RecursoEducativo
-from .forms import IncidenciaForm
+from .forms import IncidenciaForm, CambiarEstadoIncidenciaForm
 from .serializers import IncidenciaSerializer, RegionSerializer
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.views.decorators.http import require_http_methods
@@ -261,6 +261,27 @@ def editar_incidencia(request, incidencia_id):
         form = IncidenciaForm(instance=incidencia)
     
     return render(request, 'aqualand_app/editar_incidencia.html', {
+        'form': form,
+        'incidencia': incidencia
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def cambiar_estado_incidencia(request, incidencia_id):
+    incidencia = get_object_or_404(Incidencia, id=incidencia_id)
+    
+    if request.method == 'POST':
+        form = CambiarEstadoIncidenciaForm(request.POST, instance=incidencia)
+        if form.is_valid():
+            nuevo_estado = form.cleaned_data.get('estado')
+            estado_display = dict(Incidencia.ESTADO_CHOICES).get(nuevo_estado)
+            incidencia = form.save()
+            messages.success(request, f'Estado de la incidencia actualizado a: {estado_display}')
+            return redirect('detalle_incidencia', incidencia_id=incidencia.id)
+    else:
+        form = CambiarEstadoIncidenciaForm(instance=incidencia)
+    
+    return render(request, 'aqualand_app/cambiar_estado_incidencia.html', {
         'form': form,
         'incidencia': incidencia
     })

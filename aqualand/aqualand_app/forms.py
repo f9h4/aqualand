@@ -39,3 +39,15 @@ class IncidenciaForm(forms.ModelForm):
             if imagen.size > 5 * 1024 * 1024:  # 5MB
                 raise forms.ValidationError('La imagen no debe superar 5MB.')
         return imagen
+
+
+class CambiarEstadoIncidenciaForm(forms.ModelForm):
+    class Meta:
+        model = Incidencia
+        fields = ['estado']
+        widgets = {
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+        }
+        labels = {
+            'estado': 'Cambiar Estado',
+        }

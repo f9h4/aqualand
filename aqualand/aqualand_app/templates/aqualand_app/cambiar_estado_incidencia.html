@@ -1,0 +1,66 @@
+{% extends 'aqualand_app/base.html' %}
+
+{% block title %}Cambiar Estado de Incidencia{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Cambiar Estado de Incidencia</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Incidencia:</strong> {{ incidencia.titulo }}<br>
+                        <strong>ID:</strong> #{{ incidencia.id }}<br>
+                        <strong>Estado Actual:</strong> 
+                        <span class="badge 
+                            {% if incidencia.estado == 'REPORTADO' %}bg-warning{% elif incidencia.estado == 'EN_PROCESO' %}bg-info{% elif incidencia.estado == 'RESUELTO' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ incidencia.get_estado_display }}
+                        </span>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.estado.id_for_label }}" class="form-label">
+                                {{ form.estado.label }}
+                            </label>
+                            {{ form.estado }}
+                            {% if form.estado.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.estado.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                            <a href="{% url 'detalle_incidencia' incidencia.id %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Actualizar Estado
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4 card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información de la Incidencia</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tipo:</strong> {{ incidencia.get_tipo_display }}</p>
+                    <p><strong>Descripción:</strong></p>
+                    <p>{{ incidencia.descripcion }}</p>
+                    <p><strong>Reportado por:</strong> {{ incidencia.reportado_por.username }}</p>
+                    <p><strong>Fecha de Reporte:</strong> {{ incidencia.fecha_reporte }}</p>
+                    <p><strong>Región:</strong> {{ incidencia.region.nombre }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

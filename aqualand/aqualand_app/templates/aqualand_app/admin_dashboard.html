@@ -93,6 +93,7 @@
                                 </small>
                                 <div>
                                     <small class="me-3">Reportado por: {{ incidencia.reportado_por }}</small>
+                                    <a href="{% url 'cambiar_estado_incidencia' incidencia.id %}" class="btn btn-sm btn-info">Estado</a>
                                     <a href="{% url 'editar_incidencia' incidencia.id %}" class="btn btn-sm btn-primary">Editar</a>
                                     <a href="{% url 'eliminar_incidencia' incidencia.id %}" class="btn btn-sm btn-danger">Eliminar</a>
                                 </div>

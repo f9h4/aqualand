@@ -17,5 +17,6 @@ urlpatterns = [
     path('recursos-educativos/', views.recursos_educativos, name='recursos_educativos'),
     path('api/incidencias/', views.IncidenciaViewSet.as_view({'get': 'list'}), name='api_incidencias'),
     path('incidencias/<int:incidencia_id>/editar/', views.editar_incidencia, name='editar_incidencia'),
+    path('incidencias/<int:incidencia_id>/cambiar-estado/', views.cambiar_estado_incidencia, name='cambiar_estado_incidencia'),
     path('incidencias/<int:incidencia_id>/eliminar/', views.eliminar_incidencia, name='eliminar_incidencia'),
 ]
