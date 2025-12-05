@@ -10,6 +10,7 @@ from rest_framework import viewsets
 from .models import Incidencia, Region, EstadisticaServicio, RecursoEducativo
 from .forms import IncidenciaForm, CambiarEstadoIncidenciaForm
 from .serializers import IncidenciaSerializer, RegionSerializer
+from .services import NewsAPIService
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.views.decorators.http import require_http_methods
 
@@ -302,3 +303,75 @@ def eliminar_incidencia(request, incidencia_id):
     return render(request, 'aqualand_app/confirmar_eliminar_incidencia.html', {
         'incidencia': incidencia
     })
+
+@require_http_methods(["GET"])
+def api_noticias_agua(request):
+    """API endpoint para obtener noticias sobre agua"""
+    try:
+        service = NewsAPIService()
+        noticias = service.get_water_news(page_size=20)
+        return JsonResponse(noticias, safe=False)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'articles': []
+        }, status=500)
+
+@require_http_methods(["GET"])
+def api_buscar_noticias(request):
+    """API endpoint para buscar noticias con palabras clave"""
+    query = request.GET.get('q', '')
+    
+    if not query:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Parámetro "q" requerido para búsqueda',
+            'articles': []
+        }, status=400)
+    
+    try:
+        service = NewsAPIService()
+        page_size = int(request.GET.get('pageSize', 20))
+        sort_by = request.GET.get('sortBy', 'publishedAt')
+        from_date = request.GET.get('from')
+        to_date = request.GET.get('to')
+        
+        noticias = service.search_everything(
+            query=query,
+            sort_by=sort_by,
+            page_size=page_size,
+            from_date=from_date,
+            to_date=to_date
+        )
+        return JsonResponse(noticias, safe=False)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'articles': []
+        }, status=500)
+
+@require_http_methods(["GET"])
+def api_titulares(request):
+    """API endpoint para obtener titulares principales"""
+    try:
+        service = NewsAPIService()
+        query = request.GET.get('q')
+        category = request.GET.get('category')
+        country = request.GET.get('country')
+        page_size = int(request.GET.get('pageSize', 20))
+        
+        titulares = service.get_top_headlines(
+            query=query,
+            category=category,
+            country=country,
+            page_size=page_size
+        )
+        return JsonResponse(titulares, safe=False)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'articles': []
+        }, status=500)

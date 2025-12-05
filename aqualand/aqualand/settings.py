@@ -242,3 +242,7 @@ LOGGING = {
         },
     },
 }
+
+# NewsAPI Configuration
+NEWSAPI_KEY = os.environ.get('NEWSAPI_KEY', '17007f6011564ab0889c8141b85c711f')
+NEWSAPI_ENDPOINT = 'https://newsapi.org/v2'
