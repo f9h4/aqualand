@@ -3,9 +3,9 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Region(models.Model):
-    nombre = models.CharField(max_length=9999999999)
+    nombre = models.CharField(max_length=255)
     cobertura_agua = models.FloatField(
-        validators=[MinValueValidator(0), MaxValueValidator(99999999999)],
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="Porcentaje de cobertura de agua potable"
     )
 
