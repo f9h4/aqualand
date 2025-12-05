@@ -87,11 +87,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'aqualand.wsgi.application'
 
 # Database
+# Configuración para Railway MySQL y desarrollo local
 if 'DATABASE_URL' in os.environ and dj_database_url is not None:
+    # Usar DATABASE_URL para Railway
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600
+            conn_max_age=600,
+            conn_health_checks=True,
         )
     }
 else:
@@ -106,6 +109,8 @@ else:
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'autocommit': True,
             }
         }
     }
